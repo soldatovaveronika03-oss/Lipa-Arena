@@ -1,1 +1,0 @@
-Lipa Arena project files.
