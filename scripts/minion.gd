@@ -58,7 +58,7 @@ func _physics_process(delta: float) -> void:
 			velocity.z = direction.z * speed
 			look_at(Vector3(target.global_position.x, global_position.y, target.global_position.z))
 	else:
-		var destination_z := -12.0 if team == "blue" else 12.0
+		var destination_z := -46.0 if team == "blue" else 46.0
 		var direction_z := signf(destination_z - global_position.z)
 		velocity.x = 0.0
 		velocity.z = direction_z * speed
@@ -93,10 +93,6 @@ func _find_target() -> Node3D:
 					nearest = objective
 		if nearest != null:
 			return nearest
-	else:
-		var player := get_tree().get_first_node_in_group("player")
-		if is_instance_valid(player) and absf(player.global_position.x - lane_x) < 4.0:
-			return player
 	return null
 
 func take_damage(amount: int) -> void:
