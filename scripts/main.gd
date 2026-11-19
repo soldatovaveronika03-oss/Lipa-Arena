@@ -343,18 +343,21 @@ func _show_mode_menu() -> void:
 
 	var normal_button := Button.new()
 	normal_button.text = "ОБЫЧНЫЙ МАТЧ  •  5 НА 5"
+	_style_mode_button(normal_button, Color(0.10, 0.30, 0.58), Color(0.35, 0.72, 1.0))
 	normal_button.custom_minimum_size = Vector2(330, 58)
 	column.add_child(normal_button)
 	normal_button.pressed.connect(_start_game.bind("Обычный матч"))
 
 	var ranked_button := Button.new()
 	ranked_button.text = "РАНГОВЫЙ МАТЧ  •  +25 / -15"
+	_style_mode_button(ranked_button, Color(0.43, 0.27, 0.08), Color(1.0, 0.72, 0.25))
 	ranked_button.custom_minimum_size = Vector2(330, 58)
 	column.add_child(ranked_button)
 	ranked_button.pressed.connect(_start_game.bind("Ранговый матч"))
 
 	var ai_button := Button.new()
 	ai_button.text = "ПРОТИВ КОМПЬЮТЕРА"
+	_style_mode_button(ai_button, Color(0.17, 0.22, 0.38), Color(0.55, 0.68, 1.0))
 	ai_button.custom_minimum_size = Vector2(330, 58)
 	column.add_child(ai_button)
 	ai_button.pressed.connect(_start_game.bind("Против компьютера"))
@@ -366,6 +369,26 @@ func _show_mode_menu() -> void:
 	note.add_theme_font_size_override("font_size", 12)
 	note.add_theme_color_override("font_color", Color(0.68, 0.72, 0.82))
 	column.add_child(note)
+
+func _style_mode_button(button: Button, base_color: Color, accent: Color) -> void:
+	button.add_theme_font_size_override("font_size", 16)
+	button.add_theme_color_override("font_color", Color(0.96, 0.97, 1.0))
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = base_color
+	normal.border_color = accent
+	normal.set_border_width_all(2)
+	normal.set_corner_radius_all(14)
+	normal.content_margin_left = 12.0
+	normal.content_margin_right = 12.0
+	normal.content_margin_top = 10.0
+	normal.content_margin_bottom = 10.0
+	button.add_theme_stylebox_override("normal", normal)
+	var hover := normal.duplicate() as StyleBoxFlat
+	hover.bg_color = base_color.lightened(0.16)
+	button.add_theme_stylebox_override("hover", hover)
+	var pressed := normal.duplicate() as StyleBoxFlat
+	pressed.bg_color = base_color.darkened(0.18)
+	button.add_theme_stylebox_override("pressed", pressed)
 
 func _start_game(mode: String) -> void:
 	selected_game_mode = mode
