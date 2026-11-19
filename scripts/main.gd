@@ -652,7 +652,7 @@ func _create_forest_border() -> void:
 	]
 	for side in [-1.0, 1.0]:
 		for row in range(3):
-			var tree_x := side * (13.8 + float(row) * 2.35)
+			var tree_x: float = side * (13.8 + float(row) * 2.35)
 			for index in range(9):
 				var z := -19.0 + float(index) * 4.7 + float(row % 2) * 1.9
 				if absf(z) < 2.4 and row == 0:
