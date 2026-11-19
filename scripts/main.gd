@@ -290,58 +290,63 @@ func _create_hud() -> void:
 	joystick.custom_minimum_size = Vector2(180, 180)
 	layer.add_child(joystick)
 
+	# Large touch targets for comfortable play on phone screens.
 	var attack := Button.new()
 	attack.text = "АТАКА"
-	attack.custom_minimum_size = Vector2(78, 56)
+	attack.custom_minimum_size = Vector2(96, 92)
+	attack.add_theme_font_size_override("font_size", 17)
 	attack.anchor_left = 1.0
 	attack.anchor_right = 1.0
 	attack.anchor_top = 1.0
 	attack.anchor_bottom = 1.0
-	attack.offset_left = -90
-	attack.offset_right = -14
-	attack.offset_top = -80
+	attack.offset_left = -108
+	attack.offset_right = -12
+	attack.offset_top = -116
 	attack.offset_bottom = -24
 	layer.add_child(attack)
 	attack.pressed.connect(player.attack)
 
 	var skill_1 := Button.new()
 	skill_1.text = "НАВ 1"
-	skill_1.custom_minimum_size = Vector2(70, 56)
+	skill_1.custom_minimum_size = Vector2(82, 82)
+	skill_1.add_theme_font_size_override("font_size", 15)
 	skill_1.anchor_left = 1.0
 	skill_1.anchor_right = 1.0
 	skill_1.anchor_top = 1.0
 	skill_1.anchor_bottom = 1.0
-	skill_1.offset_left = -168
-	skill_1.offset_right = -96
-	skill_1.offset_top = -80
+	skill_1.offset_left = -198
+	skill_1.offset_right = -116
+	skill_1.offset_top = -106
 	skill_1.offset_bottom = -24
 	layer.add_child(skill_1)
 	skill_1.pressed.connect(player.use_skill_1)
 
 	var skill_2 := Button.new()
 	skill_2.text = "НАВ 2"
-	skill_2.custom_minimum_size = Vector2(70, 56)
+	skill_2.custom_minimum_size = Vector2(82, 82)
+	skill_2.add_theme_font_size_override("font_size", 15)
 	skill_2.anchor_left = 1.0
 	skill_2.anchor_right = 1.0
 	skill_2.anchor_top = 1.0
 	skill_2.anchor_bottom = 1.0
-	skill_2.offset_left = -244
-	skill_2.offset_right = -172
-	skill_2.offset_top = -80
+	skill_2.offset_left = -288
+	skill_2.offset_right = -206
+	skill_2.offset_top = -106
 	skill_2.offset_bottom = -24
 	layer.add_child(skill_2)
 	skill_2.pressed.connect(player.use_skill_2)
 
 	var ultimate := Button.new()
 	ultimate.text = "УЛЬТА"
-	ultimate.custom_minimum_size = Vector2(70, 56)
+	ultimate.custom_minimum_size = Vector2(82, 82)
+	ultimate.add_theme_font_size_override("font_size", 15)
 	ultimate.anchor_left = 1.0
 	ultimate.anchor_right = 1.0
 	ultimate.anchor_top = 1.0
 	ultimate.anchor_bottom = 1.0
-	ultimate.offset_left = -320
-	ultimate.offset_right = -248
-	ultimate.offset_top = -80
+	ultimate.offset_left = -378
+	ultimate.offset_right = -296
+	ultimate.offset_top = -106
 	ultimate.offset_bottom = -24
 	layer.add_child(ultimate)
 	ultimate.pressed.connect(player.use_ultimate)
