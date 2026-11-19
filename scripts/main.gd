@@ -4,22 +4,31 @@ const PlayerScript = preload("res://scripts/player.gd")
 const EnemyScript = preload("res://scripts/enemy.gd")
 const AllyScript = preload("res://scripts/ally.gd")
 const JoystickScript = preload("res://scripts/virtual_joystick.gd")
+const ObjectiveScript = preload("res://scripts/objective.gd")
+const MinionScript = preload("res://scripts/minion.gd")
 
 var player: CharacterBody3D
 var health_bar: ProgressBar
 var health_text: Label
 var victory_shown: bool = false
+var wave_timer: float = 18.0
 
 func _ready() -> void:
 	_create_environment()
 	_create_arena()
+	_create_objectives()
 	_create_player()
 	_create_enemies()
 	_create_allies()
+	_spawn_wave()
 	_create_hud()
 
-func _process(_delta: float) -> void:
-	if not victory_shown and get_tree().get_nodes_in_group("enemies").is_empty():
+func _process(delta: float) -> void:
+	wave_timer -= delta
+	if wave_timer <= 0.0:
+		_spawn_wave()
+		wave_timer = 18.0
+	if not victory_shown and get_tree().get_nodes_in_group("enemy_throne").is_empty():
 		victory_shown = true
 		if is_instance_valid(player) and player.has_method("play_victory_pose"):
 			player.play_victory_pose()
@@ -194,6 +203,42 @@ func _create_crystal(pos: Vector3) -> void:
 	light.light_energy = 0.8
 	light.omni_range = 5.0
 	add_child(light)
+
+func _create_objectives() -> void:
+	# Nine defensive towers: three on each of the three lanes.
+	for lane_x in [-7.0, 0.0, 7.0]:
+		for tower_z in [-2.0, -5.0, -8.0]:
+			var tower := Node3D.new()
+			tower.name = "RedTower_%s_%s" % [str(lane_x), str(tower_z)]
+			tower.set_script(ObjectiveScript)
+			tower.position = Vector3(lane_x, 0.0, tower_z)
+			add_child(tower)
+	var throne := Node3D.new()
+	throne.name = "RedThrone"
+	throne.set_script(ObjectiveScript)
+	throne.set("is_throne", true)
+	throne.set("max_health", 5000)
+	throne.set("health", 5000)
+	throne.position = Vector3(0, 0, -11.2)
+	add_child(throne)
+
+func _spawn_wave() -> void:
+	for lane_x in [-7.0, 0.0, 7.0]:
+		for i in range(3):
+			var blue := CharacterBody3D.new()
+			blue.name = "BlueMinion"
+			blue.set_script(MinionScript)
+			blue.set("team", "blue")
+			blue.set("lane_x", lane_x)
+			blue.position = Vector3(lane_x + (float(i) - 1.0) * 0.55, 0.0, 9.0 + float(i) * 0.7)
+			add_child(blue)
+			var red := CharacterBody3D.new()
+			red.name = "RedMinion"
+			red.set_script(MinionScript)
+			red.set("team", "red")
+			red.set("lane_x", lane_x)
+			red.position = Vector3(lane_x + (float(i) - 1.0) * 0.55, 0.0, -9.0 - float(i) * 0.7)
+			add_child(red)
 
 func _create_player() -> void:
 	player = CharacterBody3D.new()
