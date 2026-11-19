@@ -128,6 +128,7 @@ func _create_arena() -> void:
 	_create_lane_paths()
 	_create_river_and_bridges()
 	_create_forest_border()
+	_create_ground_details()
 	_create_lane_lamps()
 
 func _create_base(pos: Vector3, glow: Color) -> void:
@@ -674,6 +675,72 @@ func _create_forest_border() -> void:
 		rock.scale = Vector3(1.35, 0.72, 1.0)
 		rock.material_override = _mat(Color(0.20, 0.25, 0.22), 0.05, 1.0)
 		add_child(rock)
+
+func _create_ground_details() -> void:
+	# Low-poly grass, flowers and mossy stones make the jungle feel less empty.
+	var grass_materials := [
+		_mat(Color(0.12, 0.34, 0.16), 0.0, 1.0),
+		_mat(Color(0.18, 0.42, 0.19), 0.0, 1.0),
+		_mat(Color(0.25, 0.46, 0.20), 0.0, 1.0)
+	]
+	var flower_materials := [
+		_mat(Color(1.0, 0.78, 0.30), 0.0, 0.8),
+		_mat(Color(0.82, 0.48, 0.82), 0.0, 0.8),
+		_mat(Color(0.90, 0.88, 0.72), 0.0, 0.8)
+	]
+	for side in [-1.0, 1.0]:
+		for row in range(9):
+			var z := -14.0 + float(row) * 3.5
+			for offset in [-1.1, 0.0, 1.1]:
+				var tuft := Node3D.new()
+				tuft.position = Vector3(side * (11.8 + absf(offset)), 0.0, z + offset * 0.45)
+				add_child(tuft)
+				for blade in range(3):
+					var grass := MeshInstance3D.new()
+					var blade_mesh := CylinderMesh.new()
+					blade_mesh.top_radius = 0.015
+					blade_mesh.bottom_radius = 0.075
+					blade_mesh.height = 0.48 + float((row + blade) % 3) * 0.12
+					grass.mesh = blade_mesh
+					grass.position = Vector3(float(blade - 1) * 0.10, blade_mesh.height * 0.5, 0.0)
+					grass.rotation_degrees = Vector3(0.0, float(blade) * 55.0, float(blade - 1) * 13.0)
+					grass.material_override = grass_materials[(row + blade) % grass_materials.size()]
+					tuft.add_child(grass)
+			if row % 2 == 0:
+				var flower := MeshInstance3D.new()
+				var flower_mesh := SphereMesh.new()
+				flower_mesh.radius = 0.10
+				flower_mesh.height = 0.16
+				flower.mesh = flower_mesh
+				flower.position = Vector3(side * 10.9, 0.18, z + 0.8)
+				flower.material_override = flower_materials[row % flower_materials.size()]
+				add_child(flower)
+
+	# Mossy stones and small ruins decorate the jungle edges without blocking lanes.
+	for side in [-1.0, 1.0]:
+		for z in [-11.5, -6.5, -1.5, 3.5, 8.5, 13.0]:
+			var stone := MeshInstance3D.new()
+			var stone_mesh := SphereMesh.new()
+			stone_mesh.radius = 0.48
+			stone_mesh.height = 0.62
+			stone.mesh = stone_mesh
+			stone.position = Vector3(side * 12.7, 0.28, z)
+			stone.scale = Vector3(1.35, 0.72, 0.9)
+			stone.material_override = _mat(Color(0.27, 0.32, 0.27), 0.05, 1.0)
+			add_child(stone)
+
+	# Small reflective stepping stones near the river banks.
+	for lane_x in [-7.0, 0.0, 7.0]:
+		for side in [-1.0, 1.0]:
+			var pebble := MeshInstance3D.new()
+			var pebble_mesh := CylinderMesh.new()
+			pebble_mesh.top_radius = 0.22
+			pebble_mesh.bottom_radius = 0.28
+			pebble_mesh.height = 0.10
+			pebble.mesh = pebble_mesh
+			pebble.position = Vector3(lane_x + side * 2.15, 0.015, side * 1.45)
+			pebble.material_override = _mat(Color(0.42, 0.48, 0.48), 0.18, 0.42)
+			add_child(pebble)
 
 func _create_lane_lamps() -> void:
 	# Warm lights mark the approaches to the river bridges.
