@@ -1,0 +1,26 @@
+name: Inspect LipaArena Skills Update
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-skills-archive.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract and print Godot source
+        shell: bash
+        run: |
+          set -e
+          mkdir -p /tmp/lipa
+          unzip -q LipaArena_Skills_Update.zip -d /tmp/lipa
+          echo "=== FILE LIST ==="
+          find /tmp/lipa -type f \( -name '*.gd' -o -name '*.tscn' -o -name '*.tres' -o -name 'project.godot' -o -name '*.gdshader' \) | sort
+          while IFS= read -r f; do
+            echo
+            echo "===== FILE: $f ====="
+            cat "$f"
+          done < <(find /tmp/lipa -type f \( -name '*.gd' -o -name '*.tscn' -o -name '*.tres' -o -name 'project.godot' -o -name '*.gdshader' \) | sort)
