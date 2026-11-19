@@ -93,7 +93,7 @@ func _create_environment() -> void:
 func _create_arena() -> void:
 	var floor := MeshInstance3D.new()
 	var plane := PlaneMesh.new()
-	plane.size = Vector2(42, 42)
+	plane.size = Vector2(72, 104)
 	floor.mesh = plane
 	floor.material_override = _mat(Color(0.10, 0.24, 0.15), 0.0, 1.0)
 	floor.position.y = -0.12
@@ -103,21 +103,21 @@ func _create_arena() -> void:
 	for i in range(-3, 4):
 		var line := MeshInstance3D.new()
 		var box := BoxMesh.new()
-		box.size = Vector3(0.055, 0.018, 38.0)
+		box.size = Vector3(0.055, 0.018, 96.0)
 		line.mesh = box
 		line.material_override = _mat(Color(0.15, 0.42, 0.85, 0.65), 0.3, 0.3)
 		line.position = Vector3(float(i) * 3.5, -0.085, 0)
 		add_child(line)
 
-	_create_base(Vector3(0, 0, 12), Color(0.15, 0.55, 1.0))
-	_create_base(Vector3(0, 0, -12), Color(1.0, 0.18, 0.16))
-	_create_tower(Vector3(-3.8, 0, 6.0), Color(0.18, 0.55, 1.0))
-	_create_tower(Vector3(3.8, 0, 6.0), Color(0.18, 0.55, 1.0))
-	_create_tower(Vector3(-3.8, 0, -6.0), Color(1.0, 0.22, 0.16))
-	_create_tower(Vector3(3.8, 0, -6.0), Color(1.0, 0.22, 0.16))
+	_create_base(Vector3(0, 0, 47), Color(0.15, 0.55, 1.0))
+	_create_base(Vector3(0, 0, -47), Color(1.0, 0.18, 0.16))
+	_create_tower(Vector3(-3.8, 0, 22.0), Color(0.18, 0.55, 1.0))
+	_create_tower(Vector3(3.8, 0, 22.0), Color(0.18, 0.55, 1.0))
+	_create_tower(Vector3(-3.8, 0, -22.0), Color(1.0, 0.22, 0.16))
+	_create_tower(Vector3(3.8, 0, -22.0), Color(1.0, 0.22, 0.16))
 
 	# Ruined pillars around the battlefield.
-	for x in [-14.0, 14.0]:
+	for x in [-30.0, 30.0]:
 		for z in [-10.0, -3.0, 4.0, 11.0]:
 			_create_pillar(Vector3(x, 0, z))
 
@@ -233,7 +233,7 @@ func _create_crystal(pos: Vector3) -> void:
 func _create_objectives() -> void:
 	# Nine defensive towers: three on each of the three lanes.
 	for lane_x in [-7.0, 0.0, 7.0]:
-		for tower_z in [-2.0, -5.0, -8.0]:
+		for tower_z in [-14.0, -27.0, -40.0]:
 			var tower := Node3D.new()
 			tower.name = "RedTower_%s_%s" % [str(lane_x), str(tower_z)]
 			tower.set_script(ObjectiveScript)
@@ -245,7 +245,7 @@ func _create_objectives() -> void:
 	throne.set("is_throne", true)
 	throne.set("max_health", 5000)
 	throne.set("health", 5000)
-	throne.position = Vector3(0, 0, -11.2)
+	throne.position = Vector3(0, 0, -45.0)
 	add_child(throne)
 
 func _spawn_wave() -> void:
@@ -256,23 +256,23 @@ func _spawn_wave() -> void:
 			blue.set_script(MinionScript)
 			blue.set("team", "blue")
 			blue.set("lane_x", lane_x)
-			blue.position = Vector3(lane_x + (float(i) - 1.0) * 0.55, 0.0, 9.0 + float(i) * 0.7)
+			blue.position = Vector3(lane_x + (float(i) - 1.0) * 0.55, 0.0, 41.0 + float(i) * 0.7)
 			add_child(blue)
 			var red := CharacterBody3D.new()
 			red.name = "RedMinion"
 			red.set_script(MinionScript)
 			red.set("team", "red")
 			red.set("lane_x", lane_x)
-			red.position = Vector3(lane_x + (float(i) - 1.0) * 0.55, 0.0, -9.0 - float(i) * 0.7)
+			red.position = Vector3(lane_x + (float(i) - 1.0) * 0.55, 0.0, -41.0 - float(i) * 0.7)
 			add_child(red)
 
 func _create_jungle_camps() -> void:
 	# Four neutral camps in the forest. Each camp grants a distinct temporary buff.
 	var camps := [
-		{"name": "EMBER_GUARDIAN", "buff": "ember", "label": "СТРАЖ ПЛАМЕНИ", "color": Color(1.0, 0.30, 0.10), "pos": Vector3(-11.0, 0.0, 5.0)},
-		{"name": "FROST_GUARDIAN", "buff": "frost", "label": "ЛЕДЯНОЙ СТРАЖ", "color": Color(0.20, 0.75, 1.0), "pos": Vector3(11.0, 0.0, -5.0)},
-		{"name": "WILD_GUARDIAN", "buff": "wild", "label": "ДУХ ЛЕСА", "color": Color(0.25, 0.90, 0.38), "pos": Vector3(-11.0, 0.0, -5.0)},
-		{"name": "ARCANE_GUARDIAN", "buff": "arcane", "label": "АРКАННЫЙ ГОЛЕМ", "color": Color(0.72, 0.35, 1.0), "pos": Vector3(11.0, 0.0, 5.0)}
+		{"name": "EMBER_GUARDIAN", "buff": "ember", "label": "СТРАЖ ПЛАМЕНИ", "color": Color(1.0, 0.30, 0.10), "pos": Vector3(-25.0, 0.0, 19.0)},
+		{"name": "FROST_GUARDIAN", "buff": "frost", "label": "ЛЕДЯНОЙ СТРАЖ", "color": Color(0.20, 0.75, 1.0), "pos": Vector3(25.0, 0.0, -19.0)},
+		{"name": "WILD_GUARDIAN", "buff": "wild", "label": "ДУХ ЛЕСА", "color": Color(0.25, 0.90, 0.38), "pos": Vector3(-25.0, 0.0, -19.0)},
+		{"name": "ARCANE_GUARDIAN", "buff": "arcane", "label": "АРКАННЫЙ ГОЛЕМ", "color": Color(0.72, 0.35, 1.0), "pos": Vector3(25.0, 0.0, 19.0)}
 	]
 	for camp in camps:
 		var monster := CharacterBody3D.new()
@@ -411,7 +411,7 @@ func _create_player() -> void:
 	player = CharacterBody3D.new()
 	player.name = "Kairon"
 	player.set_script(PlayerScript)
-	player.position = Vector3(0, 0.15, 7)
+	player.position = Vector3(0, 0.15, 37)
 	add_child(player)
 
 	var camera := Camera3D.new()
@@ -425,7 +425,7 @@ func _create_enemies() -> void:
 		var enemy := CharacterBody3D.new()
 		enemy.name = "RedBot%d" % i
 		enemy.set_script(EnemyScript)
-		enemy.position = Vector3(-5.0 + float(i) * 2.5, 0.15, -7.0 - float(i % 2) * 1.4)
+		enemy.position = Vector3(-5.0 + float(i) * 2.5, 0.15, -37.0 - float(i % 2) * 1.4)
 		add_child(enemy)
 
 func _create_allies() -> void:
@@ -433,8 +433,8 @@ func _create_allies() -> void:
 		var ally := CharacterBody3D.new()
 		ally.name = "BlueAlly%d" % i
 		ally.set_script(AllyScript)
-		ally.position = Vector3(-2.2 + float(i) * 1.45, 0.15, 8.5 + float(i % 2) * 1.3)
-		ally.set("lane_offset", Vector3(-2.0 + float(i) * 1.3, 0, 2.0))
+		ally.position = Vector3(-2.2 + float(i) * 1.45, 0.15, 39.0 + float(i % 2) * 1.3)
+		ally.set("lane_offset", Vector3(-2.0 + float(i) * 1.3, 0, 5.0))
 		add_child(ally)
 
 func _create_hud() -> void:
@@ -598,7 +598,7 @@ func _create_lane_paths() -> void:
 	for lane_x in [-7.0, 0.0, 7.0]:
 		var road := MeshInstance3D.new()
 		var road_mesh := BoxMesh.new()
-		road_mesh.size = Vector3(3.4, 0.10, 38.0)
+		road_mesh.size = Vector3(3.8, 0.10, 96.0)
 		road.mesh = road_mesh
 		road.position = Vector3(lane_x, -0.035, 0.0)
 		road.material_override = _mat(Color(0.43, 0.42, 0.38), 0.08, 0.96)
@@ -606,7 +606,7 @@ func _create_lane_paths() -> void:
 		for side in [-1.0, 1.0]:
 			var edge := MeshInstance3D.new()
 			var edge_mesh := BoxMesh.new()
-			edge_mesh.size = Vector3(0.12, 0.035, 37.5)
+			edge_mesh.size = Vector3(0.12, 0.035, 95.5)
 			edge.mesh = edge_mesh
 			edge.position = Vector3(lane_x + side * 1.42, 0.035, 0.0)
 			edge.material_override = _mat(Color(0.62, 0.53, 0.34), 0.25, 0.65)
@@ -616,7 +616,7 @@ func _create_river_and_bridges() -> void:
 	# A shallow decorative river crosses the arena; bridges align with all three lanes.
 	var river := MeshInstance3D.new()
 	var river_mesh := BoxMesh.new()
-	river_mesh.size = Vector3(33.0, 0.045, 2.0)
+	river_mesh.size = Vector3(56.0, 0.045, 2.6)
 	river.mesh = river_mesh
 	river.position = Vector3(0.0, -0.075, 0.0)
 	var water := _mat(Color(0.035, 0.30, 0.48, 0.92), 0.35, 0.20)
