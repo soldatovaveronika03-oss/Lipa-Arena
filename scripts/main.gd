@@ -6,30 +6,41 @@ const AllyScript = preload("res://scripts/ally.gd")
 const JoystickScript = preload("res://scripts/virtual_joystick.gd")
 const ObjectiveScript = preload("res://scripts/objective.gd")
 const MinionScript = preload("res://scripts/minion.gd")
+const JungleMonsterScript = preload("res://scripts/jungle_monster.gd")
 
 var player: CharacterBody3D
 var health_bar: ProgressBar
 var health_text: Label
 var victory_shown: bool = false
 var wave_timer: float = 18.0
+var game_started: bool = false
+var selected_game_mode: String = "Обычный матч"
+var rank_points: int = 0
 
 func _ready() -> void:
 	_create_environment()
 	_create_arena()
 	_create_objectives()
+	_create_jungle_camps()
 	_create_player()
 	_create_enemies()
 	_create_allies()
 	_spawn_wave()
 	_create_hud()
+	_load_rank_points()
+	_show_mode_menu()
 
 func _process(delta: float) -> void:
+	if not game_started:
+		return
 	wave_timer -= delta
 	if wave_timer <= 0.0:
 		_spawn_wave()
 		wave_timer = 18.0
 	if not victory_shown and get_tree().get_nodes_in_group("enemy_throne").is_empty():
 		victory_shown = true
+		if selected_game_mode == "Ранговый матч":
+			_save_rank_points(25)
 		if is_instance_valid(player) and player.has_method("play_victory_pose"):
 			player.play_victory_pose()
 		var message := Label.new()
@@ -245,6 +256,124 @@ func _spawn_wave() -> void:
 			red.position = Vector3(lane_x + (float(i) - 1.0) * 0.55, 0.0, -9.0 - float(i) * 0.7)
 			add_child(red)
 
+func _create_jungle_camps() -> void:
+	# Four neutral camps in the forest. Each camp grants a distinct temporary buff.
+	var camps := [
+		{"name": "EMBER_GUARDIAN", "buff": "ember", "label": "СТРАЖ ПЛАМЕНИ", "color": Color(1.0, 0.30, 0.10), "pos": Vector3(-11.0, 0.0, 5.0)},
+		{"name": "FROST_GUARDIAN", "buff": "frost", "label": "ЛЕДЯНОЙ СТРАЖ", "color": Color(0.20, 0.75, 1.0), "pos": Vector3(11.0, 0.0, -5.0)},
+		{"name": "WILD_GUARDIAN", "buff": "wild", "label": "ДУХ ЛЕСА", "color": Color(0.25, 0.90, 0.38), "pos": Vector3(-11.0, 0.0, -5.0)},
+		{"name": "ARCANE_GUARDIAN", "buff": "arcane", "label": "АРКАННЫЙ ГОЛЕМ", "color": Color(0.72, 0.35, 1.0), "pos": Vector3(11.0, 0.0, 5.0)}
+	]
+	for camp in camps:
+		var monster := CharacterBody3D.new()
+		monster.name = str(camp["name"])
+		monster.set_script(JungleMonsterScript)
+		monster.set("buff_type", str(camp["buff"]))
+		monster.set("monster_title", str(camp["label"]))
+		monster.set("glow_color", camp["color"])
+		monster.position = camp["pos"]
+		add_child(monster)
+
+func _load_rank_points() -> void:
+	var config := ConfigFile.new()
+	if config.load("user://lipa_rank.cfg") == OK:
+		rank_points = int(config.get_value("ranked", "points", 0))
+
+func _save_rank_points(change: int) -> void:
+	rank_points = maxi(rank_points + change, 0)
+	var config := ConfigFile.new()
+	config.set_value("ranked", "points", rank_points)
+	config.save("user://lipa_rank.cfg")
+
+func _show_mode_menu() -> void:
+	get_tree().paused = true
+	var layer := get_node("CanvasLayer") as CanvasLayer
+	var overlay := Control.new()
+	overlay.name = "ModeMenu"
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+	layer.add_child(overlay)
+
+	var shade := ColorRect.new()
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.color = Color(0.015, 0.025, 0.07, 0.94)
+	shade.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.add_child(shade)
+
+	var panel := PanelContainer.new()
+	panel.anchor_left = 0.5
+	panel.anchor_right = 0.5
+	panel.anchor_top = 0.5
+	panel.anchor_bottom = 0.5
+	panel.offset_left = -190
+	panel.offset_right = 190
+	panel.offset_top = -245
+	panel.offset_bottom = 245
+	overlay.add_child(panel)
+
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 14)
+	panel.add_child(column)
+
+	var title := Label.new()
+	title.text = "LIPA ARENA"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 34)
+	title.add_theme_color_override("font_color", Color(0.55, 0.82, 1.0))
+	column.add_child(title)
+
+	var subtitle := Label.new()
+	subtitle.text = "ВЫБЕРИ РЕЖИМ БОЯ"
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_font_size_override("font_size", 17)
+	column.add_child(subtitle)
+
+	var rank_label := Label.new()
+	rank_label.text = "РЕЙТИНГ: %d ОЧКОВ" % rank_points
+	rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	rank_label.add_theme_color_override("font_color", Color(1.0, 0.78, 0.32))
+	column.add_child(rank_label)
+
+	var normal_button := Button.new()
+	normal_button.text = "ОБЫЧНЫЙ МАТЧ  •  5 НА 5"
+	normal_button.custom_minimum_size = Vector2(330, 58)
+	column.add_child(normal_button)
+	normal_button.pressed.connect(_start_game.bind("Обычный матч"))
+
+	var ranked_button := Button.new()
+	ranked_button.text = "РАНГОВЫЙ МАТЧ  •  +25 / -15"
+	ranked_button.custom_minimum_size = Vector2(330, 58)
+	column.add_child(ranked_button)
+	ranked_button.pressed.connect(_start_game.bind("Ранговый матч"))
+
+	var ai_button := Button.new()
+	ai_button.text = "ПРОТИВ КОМПЬЮТЕРА"
+	ai_button.custom_minimum_size = Vector2(330, 58)
+	column.add_child(ai_button)
+	ai_button.pressed.connect(_start_game.bind("Против компьютера"))
+
+	var note := Label.new()
+	note.text = "Одиночная версия: соперники управляются ИИ."
+	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.add_theme_font_size_override("font_size", 12)
+	note.add_theme_color_override("font_color", Color(0.68, 0.72, 0.82))
+	column.add_child(note)
+
+func _start_game(mode: String) -> void:
+	selected_game_mode = mode
+	game_started = true
+	get_tree().paused = false
+	var menu := get_node_or_null("CanvasLayer/ModeMenu")
+	if menu != null:
+		menu.queue_free()
+	var mode_label := Label.new()
+	mode_label.text = selected_game_mode.to_upper()
+	mode_label.position = Vector2(18, 112)
+	mode_label.add_theme_font_size_override("font_size", 13)
+	mode_label.add_theme_color_override("font_color", Color(1.0, 0.78, 0.32))
+	get_node("CanvasLayer").add_child(mode_label)
+
 func _create_player() -> void:
 	player = CharacterBody3D.new()
 	player.name = "Kairon"
@@ -421,6 +550,8 @@ func _on_hero_selected(index: int) -> void:
 		_update_health_ui(player.health, player.max_health)
 
 func _show_defeat() -> void:
+	if selected_game_mode == "Ранговый матч":
+		_save_rank_points(-15)
 	var message := Label.new()
 	message.text = "ПОРАЖЕНИЕ"
 	message.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
