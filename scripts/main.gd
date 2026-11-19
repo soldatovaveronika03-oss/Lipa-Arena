@@ -63,19 +63,19 @@ func _create_environment() -> void:
 	e.background_mode = Environment.BG_SKY
 	var sky := Sky.new()
 	var sky_mat := ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color(0.025, 0.035, 0.12)
-	sky_mat.sky_horizon_color = Color(0.16, 0.12, 0.24)
-	sky_mat.ground_bottom_color = Color(0.025, 0.025, 0.05)
-	sky_mat.ground_horizon_color = Color(0.12, 0.09, 0.16)
+	sky_mat.sky_top_color = Color(0.16, 0.34, 0.55)
+	sky_mat.sky_horizon_color = Color(0.62, 0.76, 0.78)
+	sky_mat.ground_bottom_color = Color(0.12, 0.18, 0.12)
+	sky_mat.ground_horizon_color = Color(0.34, 0.42, 0.30)
 	sky.sky_material = sky_mat
 	e.sky = sky
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	e.ambient_light_color = Color(0.72, 0.78, 0.88)
-	e.ambient_light_energy = 0.82
+	e.ambient_light_color = Color(0.78, 0.88, 0.76)
+	e.ambient_light_energy = 0.95
 	e.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	e.glow_enabled = true
-	e.glow_intensity = 0.65
-	e.glow_bloom = 0.12
+	e.glow_intensity = 0.28
+	e.glow_bloom = 0.06
 	e.ssao_enabled = true
 	e.ssao_radius = 2.0
 	e.ssao_intensity = 1.2
@@ -83,9 +83,9 @@ func _create_environment() -> void:
 	add_child(env)
 
 	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-48, -32, 0)
-	sun.light_color = Color(1.0, 0.88, 0.70)
-	sun.light_energy = 1.55
+	sun.rotation_degrees = Vector3(-52, -28, 0)
+	sun.light_color = Color(1.0, 0.96, 0.84)
+	sun.light_energy = 1.35
 	sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 55.0
 	add_child(sun)
@@ -130,6 +130,7 @@ func _create_arena() -> void:
 	_create_forest_border()
 	_create_ground_details()
 	_create_lane_lamps()
+	_create_arena_landmarks()
 
 func _create_base(pos: Vector3, glow: Color) -> void:
 	var platform := MeshInstance3D.new()
@@ -825,3 +826,84 @@ func _create_lane_lamps() -> void:
 			glow.emission_energy_multiplier = 1.4
 			flame.material_override = glow
 			add_child(flame)
+
+
+func _create_arena_landmarks() -> void:
+	# Natural riverbanks: layered stones and reeds soften the straight river edge.
+	var bank_mat := _mat(Color(0.30, 0.36, 0.29), 0.02, 1.0)
+	var reed_mat := _mat(Color(0.22, 0.43, 0.17), 0.0, 1.0)
+	for side in [-1.0, 1.0]:
+		for i in range(18):
+			var z := -1.9 + float(i) * 0.22
+			var stone := MeshInstance3D.new()
+			var stone_mesh := SphereMesh.new()
+			stone_mesh.radius = 0.22 + float(i % 3) * 0.07
+			stone_mesh.height = 0.28
+			stone.mesh = stone_mesh
+			stone.position = Vector3(side * (16.0 + float(i % 2) * 0.25), -0.01, z)
+			stone.scale = Vector3(1.6, 0.65, 0.9)
+			stone.material_override = bank_mat
+			add_child(stone)
+
+	# Ancient jungle shrines sit beside, not on, the playable lanes.
+	for side in [-1.0, 1.0]:
+		for z in [-14.0, -4.5, 4.5, 14.0]:
+			var shrine := Node3D.new()
+			shrine.position = Vector3(side * 10.9, 0.0, z)
+			shrine.rotation_degrees.y = side * -12.0
+			add_child(shrine)
+
+			var plinth := MeshInstance3D.new()
+			var plinth_mesh := BoxMesh.new()
+			plinth_mesh.size = Vector3(1.8, 0.35, 1.5)
+			plinth.mesh = plinth_mesh
+			plinth.position.y = 0.18
+			plinth.material_override = _mat(Color(0.34, 0.37, 0.31), 0.08, 0.92)
+			shrine.add_child(plinth)
+
+			for pillar_side in [-1.0, 1.0]:
+				var pillar := MeshInstance3D.new()
+				var pillar_mesh := CylinderMesh.new()
+				pillar_mesh.top_radius = 0.18
+				pillar_mesh.bottom_radius = 0.27
+				pillar_mesh.height = 1.75
+				pillar.mesh = pillar_mesh
+				pillar.position = Vector3(pillar_side * 0.62, 1.05, 0.0)
+				pillar.material_override = _mat(Color(0.40, 0.43, 0.35), 0.12, 0.86)
+				shrine.add_child(pillar)
+
+			var lintel := MeshInstance3D.new()
+			var lintel_mesh := BoxMesh.new()
+			lintel_mesh.size = Vector3(1.75, 0.28, 0.48)
+			lintel.mesh = lintel_mesh
+			lintel.position = Vector3(0.0, 2.0, 0.0)
+			lintel.material_override = _mat(Color(0.46, 0.44, 0.34), 0.10, 0.82)
+			shrine.add_child(lintel)
+
+			var moss := MeshInstance3D.new()
+			var moss_mesh := SphereMesh.new()
+			moss_mesh.radius = 0.38
+			moss_mesh.height = 0.25
+			moss.mesh = moss_mesh
+			moss.position = Vector3(0.0, 0.42, 0.0)
+			moss.scale = Vector3(1.8, 0.5, 1.1)
+			moss.material_override = reed_mat
+			shrine.add_child(moss)
+
+	# Small patches of varied ground color break up the flat green floor.
+	var patch_colors := [
+		Color(0.13, 0.29, 0.14),
+		Color(0.17, 0.33, 0.15),
+		Color(0.22, 0.36, 0.16)
+	]
+	for side in [-1.0, 1.0]:
+		for i in range(7):
+			var patch := MeshInstance3D.new()
+			var patch_mesh := SphereMesh.new()
+			patch_mesh.radius = 1.0
+			patch_mesh.height = 0.12
+			patch.mesh = patch_mesh
+			patch.position = Vector3(side * (11.0 + float(i % 3) * 1.3), -0.045, -15.0 + float(i) * 4.8)
+			patch.scale = Vector3(1.8, 0.18, 1.15)
+			patch.material_override = _mat(patch_colors[i % patch_colors.size()], 0.0, 1.0)
+			add_child(patch)
