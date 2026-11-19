@@ -2,7 +2,7 @@ name: Read latest Godot screenshots
 on:
   push:
     paths:
-      - 'screenshots/**'
+      - '.github/workflows/read-screenshots.yml'
   workflow_dispatch:
 jobs:
   ocr:
