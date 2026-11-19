@@ -1,4 +1,4 @@
-name: Lipa Arena - Godot validation
+name: Lipa Arena - Android APK
 
 on:
   push:
@@ -8,12 +8,25 @@ on:
   workflow_dispatch:
 
 jobs:
-  validate:
-    name: Validate Godot project
+  build-android:
+    name: Build Android APK
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: |
+          sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.1" "cmdline-tools;latest" "cmake;3.10.2.4988404" "ndk;28.1.13356709"
 
       - name: Install Godot 4.7
         shell: bash
@@ -28,8 +41,35 @@ jobs:
           sudo mv "$GODOT_BIN" /usr/local/bin/godot
           godot --version
 
-      - name: Import project and check scripts
+      - name: Install Godot export templates
+        run: |
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.7.stable"
+          curl -L --fail --retry 3 "https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_export_templates.tpz" -o templates.tpz
+          unzip -q templates.tpz -d templates
+          cp -a templates/templates/. "$HOME/.local/share/godot/export_templates/4.7.stable/"
+
+      - name: Create temporary debug signing key
+        run: |
+          mkdir -p "$HOME/.android"
+          keytool -genkeypair -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+
+      - name: Validate project
         run: godot --headless --editor --path . --quit
 
-      - name: Run main scene briefly
-        run: godot --headless --path . --quit-after 5
+      - name: Export Android APK
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ runner.temp }}/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+        run: |
+          mkdir -p build
+          cp "$HOME/.android/debug.keystore" "${{ runner.temp }}/debug.keystore"
+          godot --headless --path . --export-debug "Android" build/LipaArena.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lipa-Arena-Android-APK
+          path: build/LipaArena.apk
+          if-no-files-found: error
+          retention-days: 14
