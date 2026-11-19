@@ -14,12 +14,15 @@ public class GameBootstrap : MonoBehaviour
     Camera cam;
     float matchTime;
     bool started;
+    int joystickFinger = -1;
+    Vector2 joystickOrigin;
 
     void Awake() { I = this; }
     void Start() { BuildWorld(); ShowHeroSelect(); }
     void Update()
     {
         if (!started) return;
+        HandleTouchJoystick();
         matchTime += Time.deltaTime;
         if (Player != null && Player.IsAlive) FollowCamera();
     }
@@ -67,6 +70,18 @@ public class GameBootstrap : MonoBehaviour
         var go=GameObject.CreatePrimitive(PrimitiveType.Capsule); go.name=label; go.transform.position=p+Vector3.up;
         var u=go.AddComponent<MobaUnit>(); u.Init(team,type,player,team==0?matBlue:matRed); Units.Add(u); return u;
     }
+    void HandleTouchJoystick(){
+        if(Input.touchCount==0){if(joystickFinger!=-1){joystickFinger=-1;if(Player!=null)Player.MoveInput=Vector3.zero;}return;}
+        foreach(Touch touch in Input.touches){
+            if(touch.phase==TouchPhase.Began && joystickFinger==-1 && touch.position.x<Screen.width*.48f && touch.position.y<Screen.height*.82f){
+                joystickFinger=touch.fingerId;joystickOrigin=touch.position;
+            }
+            if(touch.fingerId==joystickFinger){
+                if(touch.phase==TouchPhase.Ended||touch.phase==TouchPhase.Canceled){joystickFinger=-1;Player.MoveInput=Vector3.zero;}
+                else {Vector2 delta=Vector2.ClampMagnitude((touch.position-joystickOrigin)/65f,1f);Player.MoveInput=new Vector3(delta.x,0,delta.y);}
+            }
+        }
+    }
     void FollowCamera(){var target=Player.transform.position; cam.transform.position=Vector3.Lerp(cam.transform.position,new Vector3(target.x-2,32,target.z-25),Time.deltaTime*3); cam.transform.LookAt(target);}
     Material Mat(Color c){var m=new Material(Shader.Find("Standard")); m.color=c; return m;}
     void ShowHeroSelect(){Status="VEYRA: CLASH OF REALMS";}
@@ -90,8 +105,7 @@ public class GameBootstrap : MonoBehaviour
         if(GUI.Button(new Rect(Screen.width-120,Screen.height-190,100,70),"НАВЫК 1")) Player.CastSkill(0);
         if(GUI.Button(new Rect(Screen.width-230,Screen.height-105,100,70),"НАВЫК 2")) Player.CastSkill(1);
         if(GUI.Button(new Rect(Screen.width-120,Screen.height-105,100,70),"УЛЬТА")) Player.CastSkill(2);
-        if(GUI.Button(new Rect(18,Screen.height-120,150,90),"▲ ВПЕРЁД")) Player.MoveInput=new Vector3(0,0,1);
-        if(GUI.Button(new Rect(18,Screen.height-55,150,45),"СТОП")) Player.MoveInput=Vector3.zero;
+        GUI.Box(new Rect(18,Screen.height-155,150,130),"ДЖОЙСТИК\n(тяни пальцем)");
         GUI.Label(new Rect(20,112,250,30),$"HP: {Mathf.CeilToInt(Player.Health)}/{Player.MaxHealth}   XP: {Player.XP}");
     }
 }
