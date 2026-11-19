@@ -53,23 +53,41 @@ jobs:
           unzip -q templates.tpz -d templates
           cp -a templates/templates/. "$HOME/.local/share/godot/export_templates/4.7.stable/"
 
-      - name: Create temporary debug signing key
-        run: |
-          mkdir -p "$HOME/.android"
-          keytool -genkeypair -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-
       - name: Validate project
         run: godot --headless --editor --path . --quit
 
-      - name: Export Android APK
-        env:
-          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ runner.temp }}/debug.keystore
-          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
-          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+      - name: Runtime startup smoke test
+        shell: bash
         run: |
+          set -euo pipefail
+          timeout 30s godot --headless --path . --quit-after 3 2>&1 | tee runtime-smoke.log
+          if grep -E "SCRIPT ERROR|Parse Error" runtime-smoke.log; then
+            echo "Godot reported a startup script error."
+            exit 1
+          fi
+
+      - name: Prepare persistent Android signing key
+        env:
+          LIPA_ANDROID_KEYSTORE_BASE64: ${{ secrets.LIPA_ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          test -n "$LIPA_ANDROID_KEYSTORE_BASE64" || { echo "Missing GitHub Actions secret: LIPA_ANDROID_KEYSTORE_BASE64"; exit 1; }
+          echo "$LIPA_ANDROID_KEYSTORE_BASE64" | base64 --decode > "${{ runner.temp }}/lipa-release.keystore"
+          test -s "${{ runner.temp }}/lipa-release.keystore"
+
+      - name: Export signed Android APK
+        env:
+          GODOT_ANDROID_KEYSTORE_RELEASE_PATH: ${{ runner.temp }}/lipa-release.keystore
+          GODOT_ANDROID_KEYSTORE_RELEASE_USER: ${{ secrets.LIPA_ANDROID_KEY_ALIAS }}
+          GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: ${{ secrets.LIPA_ANDROID_KEYSTORE_PASSWORD }}
+          GODOT_ANDROID_KEYSTORE_RELEASE_USER_PASSWORD: ${{ secrets.LIPA_ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$GODOT_ANDROID_KEYSTORE_RELEASE_USER" || { echo "Missing GitHub Actions secret: LIPA_ANDROID_KEY_ALIAS"; exit 1; }
+          test -n "$GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD" || { echo "Missing GitHub Actions secret: LIPA_ANDROID_KEYSTORE_PASSWORD"; exit 1; }
+          test -n "$GODOT_ANDROID_KEYSTORE_RELEASE_USER_PASSWORD" || { echo "Missing GitHub Actions secret: LIPA_ANDROID_KEY_PASSWORD"; exit 1; }
           mkdir -p build
-          cp "$HOME/.android/debug.keystore" "${{ runner.temp }}/debug.keystore"
-          godot --headless --path . --export-debug "Android" build/LipaArena.apk
+          godot --headless --path . --export-release "Android" build/LipaArena.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
