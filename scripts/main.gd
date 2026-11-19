@@ -93,7 +93,7 @@ func _create_environment() -> void:
 func _create_arena() -> void:
 	var floor := MeshInstance3D.new()
 	var plane := PlaneMesh.new()
-	plane.size = Vector2(34, 34)
+	plane.size = Vector2(42, 42)
 	floor.mesh = plane
 	floor.material_override = _mat(Color(0.10, 0.24, 0.15), 0.0, 1.0)
 	floor.position.y = -0.12
@@ -103,7 +103,7 @@ func _create_arena() -> void:
 	for i in range(-3, 4):
 		var line := MeshInstance3D.new()
 		var box := BoxMesh.new()
-		box.size = Vector3(0.055, 0.018, 30.0)
+		box.size = Vector3(0.055, 0.018, 38.0)
 		line.mesh = box
 		line.material_override = _mat(Color(0.15, 0.42, 0.85, 0.65), 0.3, 0.3)
 		line.position = Vector3(float(i) * 3.5, -0.085, 0)
@@ -596,7 +596,7 @@ func _create_lane_paths() -> void:
 	for lane_x in [-7.0, 0.0, 7.0]:
 		var road := MeshInstance3D.new()
 		var road_mesh := BoxMesh.new()
-		road_mesh.size = Vector3(3.0, 0.10, 30.0)
+		road_mesh.size = Vector3(3.4, 0.10, 38.0)
 		road.mesh = road_mesh
 		road.position = Vector3(lane_x, -0.035, 0.0)
 		road.material_override = _mat(Color(0.43, 0.42, 0.38), 0.08, 0.96)
@@ -604,7 +604,7 @@ func _create_lane_paths() -> void:
 		for side in [-1.0, 1.0]:
 			var edge := MeshInstance3D.new()
 			var edge_mesh := BoxMesh.new()
-			edge_mesh.size = Vector3(0.10, 0.035, 29.5)
+			edge_mesh.size = Vector3(0.12, 0.035, 37.5)
 			edge.mesh = edge_mesh
 			edge.position = Vector3(lane_x + side * 1.42, 0.035, 0.0)
 			edge.material_override = _mat(Color(0.62, 0.53, 0.34), 0.25, 0.65)
@@ -642,39 +642,96 @@ func _create_river_and_bridges() -> void:
 			add_child(rail)
 
 func _create_forest_border() -> void:
-	# Decorative trees stay outside the three combat roads.
+	# Dense, layered jungle canopy along both outer sides of the three-lane arena.
+	var trunk_mat := _mat(Color(0.22, 0.12, 0.075), 0.0, 1.0)
+	var leaf_mats := [
+		_mat(Color(0.035, 0.19, 0.09), 0.0, 0.92),
+		_mat(Color(0.055, 0.29, 0.12), 0.0, 0.88),
+		_mat(Color(0.12, 0.36, 0.14), 0.0, 0.9),
+		_mat(Color(0.18, 0.40, 0.16), 0.0, 0.95)
+	]
 	for side in [-1.0, 1.0]:
-		for z in [-14.0, -9.0, -4.0, 4.0, 9.0, 14.0]:
-			var trunk := MeshInstance3D.new()
-			var trunk_mesh := CylinderMesh.new()
-			trunk_mesh.top_radius = 0.20
-			trunk_mesh.bottom_radius = 0.34
-			trunk_mesh.height = 1.65
-			trunk.mesh = trunk_mesh
-			trunk.position = Vector3(side * 15.4, 0.78, z)
-			trunk.material_override = _mat(Color(0.24, 0.15, 0.10), 0.0, 1.0)
-			add_child(trunk)
+		for row in range(3):
+			var tree_x := side * (13.8 + float(row) * 2.35)
+			for index in range(9):
+				var z := -19.0 + float(index) * 4.7 + float(row % 2) * 1.9
+				if absf(z) < 2.4 and row == 0:
+					continue
+				var tree := Node3D.new()
+				tree.position = Vector3(tree_x, 0.0, z)
+				tree.rotation_degrees.y = float((index * 37 + row * 19) % 360)
+				add_child(tree)
 
-			var crown := MeshInstance3D.new()
-			var crown_mesh := SphereMesh.new()
-			crown_mesh.radius = 1.05
-			crown_mesh.height = 2.0
-			crown.mesh = crown_mesh
-			crown.position = Vector3(side * 15.4, 2.05, z)
-			crown.material_override = _mat(Color(0.055, 0.22, 0.15), 0.0, 0.95)
-			add_child(crown)
+				var trunk := MeshInstance3D.new()
+				var trunk_mesh := CylinderMesh.new()
+				trunk_mesh.top_radius = 0.18 + float(index % 3) * 0.035
+				trunk_mesh.bottom_radius = 0.34 + float(index % 2) * 0.06
+				trunk_mesh.height = 2.8 + float(index % 3) * 0.35
+				trunk.mesh = trunk_mesh
+				trunk.position.y = trunk_mesh.height * 0.5
+				trunk.material_override = trunk_mat
+				tree.add_child(trunk)
 
-	# Small mossy rocks add shape to the outer jungle.
-	for p in [Vector3(-12.8, 0.0, -13.0), Vector3(12.8, 0.0, -13.0), Vector3(-12.8, 0.0, 13.0), Vector3(12.8, 0.0, 13.0)]:
-		var rock := MeshInstance3D.new()
-		var rock_mesh := SphereMesh.new()
-		rock_mesh.radius = 0.75
-		rock_mesh.height = 0.85
-		rock.mesh = rock_mesh
-		rock.position = p + Vector3(0.0, 0.38, 0.0)
-		rock.scale = Vector3(1.35, 0.72, 1.0)
-		rock.material_override = _mat(Color(0.20, 0.25, 0.22), 0.05, 1.0)
-		add_child(rock)
+				for crown_index in range(4):
+					var crown := MeshInstance3D.new()
+					var crown_mesh := SphereMesh.new()
+					crown_mesh.radius = 1.35 - float(crown_index % 2) * 0.16
+					crown_mesh.height = 2.0
+					crown.mesh = crown_mesh
+					crown.position = Vector3(
+						cos(float(crown_index) * 1.57) * 0.68,
+						2.45 + float(crown_index % 2) * 0.72,
+						sin(float(crown_index) * 1.57) * 0.68
+					)
+					crown.scale = Vector3(1.0, 0.82, 1.0)
+					crown.material_override = leaf_mats[(index + row + crown_index) % leaf_mats.size()]
+					tree.add_child(crown)
+
+				# Hanging roots and small branches give trunks a less geometric silhouette.
+				for branch_index in range(3):
+					var branch := MeshInstance3D.new()
+					var branch_mesh := CylinderMesh.new()
+					branch_mesh.top_radius = 0.055
+					branch_mesh.bottom_radius = 0.12
+					branch_mesh.height = 1.0
+					branch.mesh = branch_mesh
+					branch.position = Vector3(0.0, 1.65, 0.0)
+					branch.rotation_degrees = Vector3(0.0, float(branch_index) * 120.0, 32.0)
+					branch.material_override = trunk_mat
+					tree.add_child(branch)
+
+	# Bush clusters mark jungle entrances and safe pockets beside each lane.
+	for side in [-1.0, 1.0]:
+		for z in [-13.0, -7.0, 0.0, 7.0, 13.0]:
+			var bush_group := Node3D.new()
+			bush_group.position = Vector3(side * 10.0, 0.0, z)
+			add_child(bush_group)
+			for part in range(5):
+				var bush := MeshInstance3D.new()
+				var bush_mesh := SphereMesh.new()
+				bush_mesh.radius = 0.72 + float(part % 2) * 0.12
+				bush_mesh.height = 1.15
+				bush.mesh = bush_mesh
+				bush.position = Vector3(float(part - 2) * 0.52, 0.45, float((part % 2) - 0.5) * 0.62)
+				bush.material_override = leaf_mats[(part + 1) % leaf_mats.size()]
+				bush_group.add_child(bush)
+
+	# Rocky outcrops and broken columns at the four corners.
+	for corner_x in [-1.0, 1.0]:
+		for corner_z in [-1.0, 1.0]:
+			var rock_cluster := Node3D.new()
+			rock_cluster.position = Vector3(corner_x * 18.0, 0.0, corner_z * 18.0)
+			add_child(rock_cluster)
+			for rock_index in range(4):
+				var rock := MeshInstance3D.new()
+				var rock_mesh := SphereMesh.new()
+				rock_mesh.radius = 0.8 + float(rock_index % 2) * 0.35
+				rock_mesh.height = 1.1
+				rock.mesh = rock_mesh
+				rock.position = Vector3(float(rock_index % 2) * 1.1, 0.45, float(rock_index - 2) * 0.65)
+				rock.scale = Vector3(1.35, 0.8, 1.0)
+				rock.material_override = _mat(Color(0.24, 0.29, 0.25), 0.04, 0.96)
+				rock_cluster.add_child(rock)
 
 func _create_ground_details() -> void:
 	# Low-poly grass, flowers and mossy stones make the jungle feel less empty.
