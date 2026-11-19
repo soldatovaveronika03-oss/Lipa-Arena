@@ -399,7 +399,7 @@ func _damage_in_front(amount: int, radius: float, dot_min: float) -> void:
 	for enemy in _get_attack_targets():
 		if not is_instance_valid(enemy):
 			continue
-		var offset := enemy.global_position - global_position
+		var offset: Vector3 = enemy.global_position - global_position
 		offset.y = 0.0
 		if offset.length() <= radius and offset.length() > 0.01 and forward.dot(offset.normalized()) >= dot_min:
 			if enemy.has_method("take_damage"):
