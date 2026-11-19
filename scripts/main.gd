@@ -107,6 +107,11 @@ func _create_arena() -> void:
 	for p in [Vector3(-7, 0, -7), Vector3(7, 0, -7), Vector3(-7, 0, 7), Vector3(7, 0, 7)]:
 		_create_crystal(p)
 
+	_create_lane_paths()
+	_create_river_and_bridges()
+	_create_forest_border()
+	_create_lane_lamps()
+
 func _create_base(pos: Vector3, glow: Color) -> void:
 	var platform := MeshInstance3D.new()
 	var cyl := CylinderMesh.new()
@@ -417,3 +422,116 @@ func _show_defeat() -> void:
 	message.add_theme_font_size_override("font_size", 42)
 	message.add_theme_color_override("font_color", Color(1.0, 0.28, 0.2))
 	get_node("CanvasLayer").add_child(message)
+
+
+func _create_lane_paths() -> void:
+	# Three broad stone roads, kept clear for minions and heroes.
+	for lane_x in [-7.0, 0.0, 7.0]:
+		var road := MeshInstance3D.new()
+		var road_mesh := BoxMesh.new()
+		road_mesh.size = Vector3(3.0, 0.10, 30.0)
+		road.mesh = road_mesh
+		road.position = Vector3(lane_x, -0.035, 0.0)
+		road.material_override = _mat(Color(0.30, 0.31, 0.38), 0.18, 0.88)
+		add_child(road)
+		for side in [-1.0, 1.0]:
+			var edge := MeshInstance3D.new()
+			var edge_mesh := BoxMesh.new()
+			edge_mesh.size = Vector3(0.10, 0.035, 29.5)
+			edge.mesh = edge_mesh
+			edge.position = Vector3(lane_x + side * 1.42, 0.035, 0.0)
+			edge.material_override = _mat(Color(0.62, 0.53, 0.34), 0.25, 0.65)
+			add_child(edge)
+
+func _create_river_and_bridges() -> void:
+	# A shallow decorative river crosses the arena; bridges align with all three lanes.
+	var river := MeshInstance3D.new()
+	var river_mesh := BoxMesh.new()
+	river_mesh.size = Vector3(33.0, 0.045, 2.0)
+	river.mesh = river_mesh
+	river.position = Vector3(0.0, -0.075, 0.0)
+	var water := _mat(Color(0.035, 0.30, 0.48, 0.92), 0.35, 0.20)
+	water.emission_enabled = true
+	water.emission = Color(0.015, 0.12, 0.22)
+	water.emission_energy_multiplier = 0.45
+	river.material_override = water
+	add_child(river)
+
+	for lane_x in [-7.0, 0.0, 7.0]:
+		var bridge := MeshInstance3D.new()
+		var bridge_mesh := BoxMesh.new()
+		bridge_mesh.size = Vector3(3.45, 0.20, 2.75)
+		bridge.mesh = bridge_mesh
+		bridge.position = Vector3(lane_x, 0.045, 0.0)
+		bridge.material_override = _mat(Color(0.48, 0.43, 0.36), 0.12, 0.92)
+		add_child(bridge)
+		for side in [-1.0, 1.0]:
+			var rail := MeshInstance3D.new()
+			var rail_mesh := BoxMesh.new()
+			rail_mesh.size = Vector3(0.16, 0.28, 2.65)
+			rail.mesh = rail_mesh
+			rail.position = Vector3(lane_x + side * 1.58, 0.22, 0.0)
+			rail.material_override = _mat(Color(0.34, 0.37, 0.46), 0.45, 0.55)
+			add_child(rail)
+
+func _create_forest_border() -> void:
+	# Decorative trees stay outside the three combat roads.
+	for side in [-1.0, 1.0]:
+		for z in [-14.0, -9.0, -4.0, 4.0, 9.0, 14.0]:
+			var trunk := MeshInstance3D.new()
+			var trunk_mesh := CylinderMesh.new()
+			trunk_mesh.top_radius = 0.20
+			trunk_mesh.bottom_radius = 0.34
+			trunk_mesh.height = 1.65
+			trunk.mesh = trunk_mesh
+			trunk.position = Vector3(side * 15.4, 0.78, z)
+			trunk.material_override = _mat(Color(0.24, 0.15, 0.10), 0.0, 1.0)
+			add_child(trunk)
+
+			var crown := MeshInstance3D.new()
+			var crown_mesh := SphereMesh.new()
+			crown_mesh.radius = 1.05
+			crown_mesh.height = 2.0
+			crown.mesh = crown_mesh
+			crown.position = Vector3(side * 15.4, 2.05, z)
+			crown.material_override = _mat(Color(0.055, 0.22, 0.15), 0.0, 0.95)
+			add_child(crown)
+
+	# Small mossy rocks add shape to the outer jungle.
+	for p in [Vector3(-12.8, 0.0, -13.0), Vector3(12.8, 0.0, -13.0), Vector3(-12.8, 0.0, 13.0), Vector3(12.8, 0.0, 13.0)]:
+		var rock := MeshInstance3D.new()
+		var rock_mesh := SphereMesh.new()
+		rock_mesh.radius = 0.75
+		rock_mesh.height = 0.85
+		rock.mesh = rock_mesh
+		rock.position = p + Vector3(0.0, 0.38, 0.0)
+		rock.scale = Vector3(1.35, 0.72, 1.0)
+		rock.material_override = _mat(Color(0.20, 0.25, 0.22), 0.05, 1.0)
+		add_child(rock)
+
+func _create_lane_lamps() -> void:
+	# Warm lights mark the approaches to the river bridges.
+	for lane_x in [-7.0, 0.0, 7.0]:
+		for side in [-1.0, 1.0]:
+			var lamp := MeshInstance3D.new()
+			var lamp_mesh := CylinderMesh.new()
+			lamp_mesh.top_radius = 0.10
+			lamp_mesh.bottom_radius = 0.16
+			lamp_mesh.height = 0.75
+			lamp.mesh = lamp_mesh
+			lamp.position = Vector3(lane_x + side * 2.15, 0.38, side * 1.85)
+			lamp.material_override = _mat(Color(0.38, 0.31, 0.22), 0.35, 0.55)
+			add_child(lamp)
+
+			var flame := MeshInstance3D.new()
+			var flame_mesh := SphereMesh.new()
+			flame_mesh.radius = 0.20
+			flame_mesh.height = 0.38
+			flame.mesh = flame_mesh
+			flame.position = lamp.position + Vector3(0.0, 0.48, 0.0)
+			var glow := _mat(Color(1.0, 0.58, 0.20), 0.0, 0.25)
+			glow.emission_enabled = true
+			glow.emission = Color(1.0, 0.28, 0.06)
+			glow.emission_energy_multiplier = 1.4
+			flame.material_override = glow
+			add_child(flame)
