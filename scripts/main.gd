@@ -131,6 +131,7 @@ func _create_arena() -> void:
 	_create_ground_details()
 	_create_lane_lamps()
 	_create_arena_landmarks()
+	_create_jungle_depth_details()
 
 func _create_base(pos: Vector3, glow: Color) -> void:
 	var platform := MeshInstance3D.new()
@@ -907,3 +908,99 @@ func _create_arena_landmarks() -> void:
 			patch.scale = Vector3(1.8, 0.18, 1.15)
 			patch.material_override = _mat(patch_colors[i % patch_colors.size()], 0.0, 1.0)
 			add_child(patch)
+
+
+func _create_jungle_depth_details() -> void:
+	# Additional lightweight environment dressing. All meshes are generated
+	# procedurally so the Android build does not depend on external assets.
+	var moss_mat := _mat(Color(0.20, 0.34, 0.18), 0.0, 1.0)
+	var dark_rock_mat := _mat(Color(0.25, 0.29, 0.27), 0.04, 0.94)
+	var warm_rock_mat := _mat(Color(0.42, 0.39, 0.31), 0.06, 0.9)
+	var fern_mat := _mat(Color(0.12, 0.31, 0.13), 0.0, 0.95)
+	var flower_mats := [
+		_mat(Color(0.96, 0.72, 0.25), 0.0, 0.82),
+		_mat(Color(0.78, 0.48, 0.72), 0.0, 0.82),
+		_mat(Color(0.78, 0.86, 0.62), 0.0, 0.82)
+	]
+
+	# Uneven mossy boulders create natural silhouettes around jungle paths.
+	for side in [-1.0, 1.0]:
+		for i in range(12):
+			var rock_group := Node3D.new()
+			rock_group.position = Vector3(side * (14.0 + float(i % 3) * 0.8), 0.0, -16.0 + float(i) * 2.8)
+			rock_group.rotation_degrees.y = float((i * 29) % 360)
+			add_child(rock_group)
+			for part in range(2 + (i % 2)):
+				var boulder := MeshInstance3D.new()
+				var boulder_mesh := SphereMesh.new()
+				boulder_mesh.radius = 0.55 + float((i + part) % 3) * 0.22
+				boulder_mesh.height = boulder_mesh.radius * 1.35
+				boulder.mesh = boulder_mesh
+				boulder.position = Vector3(float(part) * 0.58 - 0.35, boulder_mesh.radius * 0.42, float(part % 2) * 0.42)
+				boulder.scale = Vector3(1.25, 0.78, 1.0)
+				boulder.material_override = dark_rock_mat if part % 2 == 0 else warm_rock_mat
+				rock_group.add_child(boulder)
+			var moss := MeshInstance3D.new()
+			var moss_mesh := SphereMesh.new()
+			moss_mesh.radius = 0.42
+			moss_mesh.height = 0.18
+			moss.mesh = moss_mesh
+			moss.position = Vector3(0.0, 0.72, 0.0)
+			moss.scale = Vector3(1.4, 0.45, 1.0)
+			moss.material_override = moss_mat
+			rock_group.add_child(moss)
+
+	# Ferns and small flowering plants add detail without blocking lane paths.
+	for side in [-1.0, 1.0]:
+		for i in range(20):
+			var plant := Node3D.new()
+			plant.position = Vector3(side * (9.5 + float(i % 4) * 1.05), 0.0, -17.0 + float(i) * 1.75)
+			plant.rotation_degrees.y = float((i * 47) % 360)
+			add_child(plant)
+			for frond in range(5):
+				var leaf := MeshInstance3D.new()
+				var leaf_mesh := SphereMesh.new()
+				leaf_mesh.radius = 0.34
+				leaf_mesh.height = 0.85
+				leaf.mesh = leaf_mesh
+				leaf.position = Vector3(cos(float(frond) * 1.256) * 0.34, 0.38, sin(float(frond) * 1.256) * 0.34)
+				leaf.rotation_degrees = Vector3(0.0, float(frond) * 72.0, -38.0)
+				leaf.scale = Vector3(0.52, 1.0, 0.72)
+				leaf.material_override = fern_mat
+				plant.add_child(leaf)
+			if i % 3 == 0:
+				var bloom := MeshInstance3D.new()
+				var bloom_mesh := SphereMesh.new()
+				bloom_mesh.radius = 0.13
+				bloom_mesh.height = 0.16
+				bloom.mesh = bloom_mesh
+				bloom.position = Vector3(0.18, 0.55, 0.12)
+				bloom.material_override = flower_mats[i % flower_mats.size()]
+				plant.add_child(bloom)
+
+	# Fallen ancient columns and broken masonry tell the story of the lost kingdom.
+	for side in [-1.0, 1.0]:
+		for z in [-12.0, -2.0, 8.0, 15.0]:
+			var ruin := Node3D.new()
+			ruin.position = Vector3(side * 12.0, 0.0, z)
+			ruin.rotation_degrees.y = side * 24.0
+			add_child(ruin)
+			var fallen := MeshInstance3D.new()
+			var fallen_mesh := CylinderMesh.new()
+			fallen_mesh.top_radius = 0.30
+			fallen_mesh.bottom_radius = 0.38
+			fallen_mesh.height = 2.4
+			fallen.mesh = fallen_mesh
+			fallen.position = Vector3(0.0, 0.34, 0.0)
+			fallen.rotation_degrees.z = 78.0
+			fallen.material_override = warm_rock_mat
+			ruin.add_child(fallen)
+			for cap_side in [-1.0, 1.0]:
+				var fragment := MeshInstance3D.new()
+				var fragment_mesh := BoxMesh.new()
+				fragment_mesh.size = Vector3(0.68, 0.38, 0.72)
+				fragment.mesh = fragment_mesh
+				fragment.position = Vector3(cap_side * 0.82, 0.18, 0.34)
+				fragment.rotation_degrees.y = cap_side * 18.0
+				fragment.material_override = dark_rock_mat
+				ruin.add_child(fragment)
