@@ -18,6 +18,8 @@ var hero_index: int = 0
 var hero_name: String = "КАЙРОН"
 var damage_reduction: float = 0.0
 var damage_reduction_time: float = 0.0
+var buff_damage_multiplier: float = 1.0
+var buff_damage_time: float = 0.0
 var speed_boost_time: float = 0.0
 var original_speed: float = 6.0
 var visual_root: Node3D
@@ -197,6 +199,10 @@ func _process(delta: float) -> void:
 		speed_boost_time = maxf(speed_boost_time - delta, 0.0)
 		if speed_boost_time == 0.0:
 			speed = original_speed
+	if buff_damage_time > 0.0:
+		buff_damage_time = maxf(buff_damage_time - delta, 0.0)
+		if buff_damage_time == 0.0:
+			buff_damage_multiplier = 1.0
 	if is_defeated:
 		return
 	var stick := get_tree().get_first_node_in_group("virtual_joystick")
@@ -247,6 +253,24 @@ func take_damage(amount: int) -> void:
 		death_tween.tween_property(visual_root, "rotation_degrees:z", 82.0, 0.35)
 		death_tween.parallel().tween_property(visual_root, "position:y", -0.45, 0.45)
 		death_tween.tween_callback(func(): player_defeated.emit())
+
+func apply_jungle_buff(buff_type: String, duration: float = 30.0) -> void:
+	if is_defeated:
+		return
+	match buff_type:
+		"ember":
+			buff_damage_multiplier = 1.30
+			buff_damage_time = duration
+		"frost":
+			_apply_guard(0.35, duration)
+		"wild":
+			restore_health(130)
+			speed = original_speed * 1.25
+			speed_boost_time = duration
+		"arcane":
+			restore_health(70)
+			_apply_guard(0.20, duration)
+	_swing_effect(_hero_color(), 2.2)
 
 func restore_health(amount: int) -> void:
 	if is_defeated:
@@ -392,7 +416,7 @@ func _damage_nearest(amount: int, radius: float) -> void:
 				best = d
 				target = enemy
 	if target != null and target.has_method("take_damage"):
-		target.take_damage(amount)
+		target.take_damage(int(round(float(amount) * buff_damage_multiplier)))
 
 func _damage_in_front(amount: int, radius: float, dot_min: float) -> void:
 	var forward := -visual_root.global_transform.basis.z.normalized()
@@ -403,7 +427,7 @@ func _damage_in_front(amount: int, radius: float, dot_min: float) -> void:
 		offset.y = 0.0
 		if offset.length() <= radius and offset.length() > 0.01 and forward.dot(offset.normalized()) >= dot_min:
 			if enemy.has_method("take_damage"):
-				enemy.take_damage(amount)
+				enemy.take_damage(int(round(float(amount) * buff_damage_multiplier)))
 
 func _shadow_strike(amount: int) -> void:
 	var target: Node3D = null
@@ -418,7 +442,7 @@ func _shadow_strike(amount: int) -> void:
 		var away := (global_position - target.global_position).normalized()
 		global_position = target.global_position + away * 1.5
 		if target.has_method("take_damage"):
-			target.take_damage(amount)
+			target.take_damage(int(round(float(amount) * buff_damage_multiplier)))
 
 func _freeze_nearest(duration: float) -> void:
 	var target: Node3D = null
@@ -456,7 +480,7 @@ func _damage_nearby(amount: int, radius: float) -> void:
 	for enemy in _get_attack_targets():
 		if is_instance_valid(enemy) and global_position.distance_to(enemy.global_position) <= radius:
 			if enemy.has_method("take_damage"):
-				enemy.take_damage(amount)
+				enemy.take_damage(int(round(float(amount) * buff_damage_multiplier)))
 
 func _swing_effect(color: Color, scale_value: float) -> void:
 	var fx := MeshInstance3D.new()
