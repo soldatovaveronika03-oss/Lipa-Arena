@@ -335,7 +335,7 @@ func use_skill_2() -> void:
 					ally.restore_health(55)
 		5: # Stone blood
 			_apply_guard(0.70, 4.0)
-		_swing_effect(_hero_color(), 2.5)
+	_swing_effect(_hero_color(), 2.5)
 	await get_tree().create_timer(10.0).timeout
 	skill_2_ready = true
 
