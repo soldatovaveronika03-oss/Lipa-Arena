@@ -1,0 +1,31 @@
+name: Inspect Lipa Arena archive
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-archive.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract and print project source
+        shell: bash
+        run: |
+          set -e
+          mkdir -p /tmp/lipa
+          unzip -q LipaArena.zip -d /tmp/lipa
+          echo "=== ARCHIVE FILE LIST ==="
+          find /tmp/lipa -type f | sort
+          echo "=== SOURCE FILE CONTENTS ==="
+          while IFS= read -r -d '' f; do
+            case "$f" in
+              *.gd|*.tscn|*.tres|*.godot|*.cfg|*.json|*.yml|*.yaml|*.md)
+                echo
+                echo "===== FILE: ${f#/tmp/lipa/} ====="
+                sed -n '1,1200p' "$f"
+                ;;
+            esac
+          done < <(find /tmp/lipa -type f -print0 | sort -z)
