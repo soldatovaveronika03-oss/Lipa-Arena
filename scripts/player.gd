@@ -385,7 +385,7 @@ func _dash_forward(distance: float) -> void:
 func _damage_nearest(amount: int, radius: float) -> void:
 	var target: Node3D = null
 	var best := radius
-	for enemy in get_tree().get_nodes_in_group("enemies"):
+	for enemy in _get_attack_targets():
 		if is_instance_valid(enemy):
 			var d := global_position.distance_to(enemy.global_position)
 			if d < best:
@@ -396,7 +396,7 @@ func _damage_nearest(amount: int, radius: float) -> void:
 
 func _damage_in_front(amount: int, radius: float, dot_min: float) -> void:
 	var forward := -visual_root.global_transform.basis.z.normalized()
-	for enemy in get_tree().get_nodes_in_group("enemies"):
+	for enemy in _get_attack_targets():
 		if not is_instance_valid(enemy):
 			continue
 		var offset := enemy.global_position - global_position
@@ -447,8 +447,13 @@ func play_victory_pose() -> void:
 	if cape != null:
 		tween.parallel().tween_property(cape, "rotation_degrees:x", -0.22, 0.3)
 
+func _get_attack_targets() -> Array:
+	var targets: Array = get_tree().get_nodes_in_group("enemies")
+	targets.append_array(get_tree().get_nodes_in_group("enemy_objectives"))
+	return targets
+
 func _damage_nearby(amount: int, radius: float) -> void:
-	for enemy in get_tree().get_nodes_in_group("enemies"):
+	for enemy in _get_attack_targets():
 		if is_instance_valid(enemy) and global_position.distance_to(enemy.global_position) <= radius:
 			if enemy.has_method("take_damage"):
 				enemy.take_damage(amount)
