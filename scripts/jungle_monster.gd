@@ -15,8 +15,10 @@ var dead: bool = false
 var body_mesh: MeshInstance3D
 var health_label: Label3D
 var collision: CollisionShape3D
+var home_position: Vector3
 
 func _ready() -> void:
+	home_position = global_position
 	add_to_group("neutral_monsters")
 	_build_monster()
 
@@ -95,8 +97,15 @@ func _physics_process(delta: float) -> void:
 	attack_timer = maxf(attack_timer - delta, 0.0)
 	var target := _find_target()
 	if not is_instance_valid(target):
-		velocity.x = move_toward(velocity.x, 0.0, move_speed * delta)
-		velocity.z = move_toward(velocity.z, 0.0, move_speed * delta)
+		var home_offset := home_position - global_position
+		home_offset.y = 0.0
+		if home_offset.length() > 0.8:
+			var home_direction := home_offset.normalized()
+			velocity.x = home_direction.x * move_speed
+			velocity.z = home_direction.z * move_speed
+		else:
+			velocity.x = move_toward(velocity.x, 0.0, move_speed * delta)
+			velocity.z = move_toward(velocity.z, 0.0, move_speed * delta)
 	else:
 		var direction := target.global_position - global_position
 		direction.y = 0.0
@@ -117,7 +126,7 @@ func _physics_process(delta: float) -> void:
 
 func _find_target() -> Node3D:
 	var nearest: Node3D = null
-	var nearest_distance := 6.5
+	var nearest_distance := 4.5
 	var candidates: Array = get_tree().get_nodes_in_group("blue_team")
 	candidates.append_array(get_tree().get_nodes_in_group("enemies"))
 	for candidate in candidates:
