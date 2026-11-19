@@ -17,10 +17,15 @@
 3. Открыть сцену `Assets/Scenes/Arena.unity` и нажать Play.
 
 ## Сборка Android через GitHub Actions
-В репозитории есть workflow `.github/workflows/android-build.yml`. Для сборки нужен Unity Personal license file:
+В репозитории есть два workflow: `.github/workflows/activation.yml` для запроса файла активации и `.github/workflows/android-build.yml` для сборки APK. Сначала попробуй получить файл активации:
+1. Открыть Actions → Acquire Unity activation file → Run workflow.
+2. После завершения скачать artifact `Unity-Activation-File` и распаковать файл `.alf`.
+3. Открыть [портал активации Unity](https://license.unity3d.com/) и загрузить `.alf`. Если Unity предлагает Personal license, получить `.ulf`. Важно: Unity может ограничивать ручную активацию Personal; если Personal недоступна, автоматическая сборка потребует другой способ лицензирования.
+
+Для сборки APK нужен Unity license file:
 1. В GitHub открыть Settings → Secrets and variables → Actions.
 2. Создать repository secret `UNITY_LICENSE` и вставить содержимое Unity license file.
-3. При необходимости добавить `UNITY_EMAIL` и `UNITY_PASSWORD` как secrets.
+3. Добавить `UNITY_EMAIL` и `UNITY_PASSWORD` как secrets Unity-аккаунта, если их требует активация.
 4. Открыть Actions → VEYRA Android build → Run workflow.
 5. После успешной сборки скачать artifact `VEYRA-Android-APK`.
 
