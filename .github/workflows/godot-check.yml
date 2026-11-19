@@ -1,0 +1,35 @@
+name: Lipa Arena - Godot validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate Godot project
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Godot 4.7
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT_VERSION=4.7
+          curl -L --fail --retry 3 "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -o godot.zip
+          unzip -q godot.zip -d godot-bin
+          GODOT_BIN="$(find godot-bin -maxdepth 1 -type f -name 'Godot_*' | head -n 1)"
+          test -n "$GODOT_BIN"
+          chmod +x "$GODOT_BIN"
+          sudo mv "$GODOT_BIN" /usr/local/bin/godot
+          godot --version
+
+      - name: Import project and check scripts
+        run: godot --headless --editor --path . --quit
+
+      - name: Run main scene briefly
+        run: godot --headless --path . --quit-after 5
