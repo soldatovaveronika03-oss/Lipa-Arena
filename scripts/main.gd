@@ -70,17 +70,24 @@ func _create_environment() -> void:
 	sky.sky_material = sky_mat
 	e.sky = sky
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	e.ambient_light_color = Color(0.55, 0.58, 0.82)
-	e.ambient_light_energy = 0.65
+	e.ambient_light_color = Color(0.72, 0.78, 0.88)
+	e.ambient_light_energy = 0.82
 	e.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	e.glow_enabled = true
+	e.glow_intensity = 0.65
+	e.glow_bloom = 0.12
+	e.ssao_enabled = true
+	e.ssao_radius = 2.0
+	e.ssao_intensity = 1.2
 	env.environment = e
 	add_child(env)
 
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-48, -32, 0)
-	sun.light_color = Color(0.72, 0.78, 1.0)
-	sun.light_energy = 1.35
+	sun.light_color = Color(1.0, 0.88, 0.70)
+	sun.light_energy = 1.55
 	sun.shadow_enabled = true
+	sun.directional_shadow_max_distance = 55.0
 	add_child(sun)
 
 func _create_arena() -> void:
@@ -88,7 +95,7 @@ func _create_arena() -> void:
 	var plane := PlaneMesh.new()
 	plane.size = Vector2(34, 34)
 	floor.mesh = plane
-	floor.material_override = _mat(Color(0.13, 0.16, 0.22), 0.15, 0.9)
+	floor.material_override = _mat(Color(0.10, 0.24, 0.15), 0.0, 1.0)
 	floor.position.y = -0.12
 	add_child(floor)
 
@@ -481,7 +488,7 @@ func _create_hud() -> void:
 	ultimate.pressed.connect(player.use_ultimate)
 
 	var title := Label.new()
-	title.text = "LIPA ARENA  •  ДРЕВНИЕ РУИНЫ"
+	title.text = "LIPA ARENA  •  ЗАТЕРЯННОЕ КОРОЛЕВСТВО"
 	title.position = Vector2(18, 12)
 	title.add_theme_font_size_override("font_size", 18)
 	title.add_theme_color_override("font_color", Color(0.75, 0.85, 1.0))
@@ -568,7 +575,7 @@ func _create_lane_paths() -> void:
 		road_mesh.size = Vector3(3.0, 0.10, 30.0)
 		road.mesh = road_mesh
 		road.position = Vector3(lane_x, -0.035, 0.0)
-		road.material_override = _mat(Color(0.30, 0.31, 0.38), 0.18, 0.88)
+		road.material_override = _mat(Color(0.43, 0.42, 0.38), 0.08, 0.96)
 		add_child(road)
 		for side in [-1.0, 1.0]:
 			var edge := MeshInstance3D.new()
@@ -599,7 +606,7 @@ func _create_river_and_bridges() -> void:
 		bridge_mesh.size = Vector3(3.45, 0.20, 2.75)
 		bridge.mesh = bridge_mesh
 		bridge.position = Vector3(lane_x, 0.045, 0.0)
-		bridge.material_override = _mat(Color(0.48, 0.43, 0.36), 0.12, 0.92)
+		bridge.material_override = _mat(Color(0.62, 0.55, 0.43), 0.08, 0.92)
 		add_child(bridge)
 		for side in [-1.0, 1.0]:
 			var rail := MeshInstance3D.new()
