@@ -2,19 +2,21 @@ name: VEYRA Android build
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
-    paths:
-      - 'Assets/**'
-      - 'Packages/**'
-      - 'ProjectSettings/**'
-      - '.github/workflows/**'
 
 jobs:
-  build-android:
-    name: Build Android APK
+  android-build:
+    name: Build VEYRA APK
     runs-on: ubuntu-latest
     steps:
+      - name: Check Unity license secret
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        run: |
+          if [ -z "$UNITY_LICENSE" ]; then
+            echo "::error::Add the UNITY_LICENSE repository secret before starting an Android build."
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
